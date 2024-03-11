@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile_web
+    environment:
+      MYSQL_DATABASE_URI: ${MYSQL_DATABASE_URI}
+      REDIS_VAR: ${REDIS_VAR}
+      APP_HOST: ${APP_HOST}
+      APP_PORT: ${APP_PORT}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+      - worker
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile_celery
+    depends_on:
+      - redis
+    volumes:
+      - .:/url_shortener
+    environment:
+      CELERY_BROKER_URL: ${REDIS_VAR}
+      CELERY_RESULT_BACKEND: ${REDIS_VAR}
+      MYSQL_DATABASE_URI: ${MYSQL_DATABASE_URI}

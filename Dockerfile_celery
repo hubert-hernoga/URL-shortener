@@ -1,0 +1,19 @@
+# Use the official Python image as a base
+FROM python:3.8
+
+# Set the working directory
+WORKDIR /worker
+
+# Copy the application files to the working directory in the container
+COPY . .
+
+# Install dependencies
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+
+# Expose any ports the app is expecting
+EXPOSE 8000
+
+# Run the Celery worker
+CMD ["celery", "-A", "celery_config", "worker", "--loglevel=info"]
